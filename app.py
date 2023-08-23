@@ -23,6 +23,7 @@ app.layout = html.Div(
             children=[
                 html.H1("MiniClickup task log analysis"),
                 dcc.Graph(id="time-series", figure={}),
+                dcc.Graph(id="word-cloud", figure={}),
             ],
         ),
     ]
@@ -37,7 +38,6 @@ def get_data(pathname):
     parsed = urllib.parse.urlparse(pathname)
     parsed_dict = urllib.parse.parse_qs(parsed.query)
     user_name = parsed_dict["user"][0]
-    print(user_name)
     url = "http://0.0.0.0:8080/export-logs?user=" + user_name
     task_logs = requests.request("GET", url).json()
     df = pd.DataFrame(task_logs)
@@ -51,6 +51,37 @@ def get_data(pathname):
             name="time_spent",
         )
     )
+
+    fig.update_layout(
+        title="tasks logged over time",
+        xaxis_title="Date",
+        yaxis_title="Number of hours spent",
+    )
+
+    return fig
+
+
+@callback(
+    Output(component_id="word-cloud", component_property="figure"), Input("url", "href")
+)
+def get_tasks(pathname):
+    parsed = urllib.parse.urlparse(pathname)
+    parsed_dict = urllib.parse.parse_qs(parsed.query)
+    user_name = parsed_dict["user"][0]
+    url = "http://0.0.0.0:8080/export-tasks?user=" + user_name
+    tasks = requests.request("GET", url).json()
+    df = pd.DataFrame(tasks)
+
+    fig = go.Figure(
+        go.Indicator(
+            mode="number+delta",
+            value=df["task_name"].nunique(),
+            delta={"position": "top", "reference": 0},
+            domain={"x": [0, 1], "y": [0, 1]},
+        )
+    )
+
+    fig.update_layout(title="Number of total tasks")
 
     return fig
 
