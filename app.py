@@ -39,7 +39,8 @@ def get_data(pathname):
     parsed_dict = urllib.parse.parse_qs(parsed.query)
     user_name = parsed_dict["user"][0]
     url = "http://0.0.0.0:8080/export-logs?user=" + user_name
-    task_logs = requests.request("GET", url).json()
+    print(url)
+    task_logs = requests.get(url, verify=False).json()
     df = pd.DataFrame(task_logs)
     df["datetime"] = df["date"].apply(lambda x: datetime.fromtimestamp(x))
     fig = go.Figure()
@@ -69,7 +70,7 @@ def get_tasks(pathname):
     parsed_dict = urllib.parse.parse_qs(parsed.query)
     user_name = parsed_dict["user"][0]
     url = "http://0.0.0.0:8080/export-tasks?user=" + user_name
-    tasks = requests.request("GET", url).json()
+    tasks = requests.get(url, verify=False).json()
     df = pd.DataFrame(tasks)
 
     fig = go.Figure(
@@ -87,4 +88,4 @@ def get_tasks(pathname):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(host="0.0.0.0", port="8050", debug=True)
